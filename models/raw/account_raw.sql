@@ -1,3 +1,5 @@
+{{ config(materialized='table') }}
+
 with account as (select arr__c,
              cancellation_date__c,
              contract_start_date__c,
