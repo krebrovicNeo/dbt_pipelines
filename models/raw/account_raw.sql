@@ -125,4 +125,4 @@ with account as (select arr__c,
         and isdeleted = 'false')
 select *
 from account
-where rn = 1;
+where rn = 1

@@ -1,6 +1,6 @@
 {{ config(materialized='table') }}
 
-with user as (select *,
+with opportunitylineitem as (select *,
              sysdate as                                                       mv_refresh_date,
              (partition_0 || partition_1 || partition_2)::date                partition_date,
              row_number() over (partition by id order by systemmodstamp desc) rn
