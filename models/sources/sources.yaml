@@ -1,0 +1,18 @@
+sources:
+  - name: src
+    database: bidb
+    schema: dl_bi
+    quoting:
+      identifier: true
+    tables:
+      - name: "user"
+      - name: "account"
+      - name: "appointment"
+      - name: "contract"
+      - name: "new_product2_mapping"
+      - name: "opportunity"
+      - name: "product2"
+      - name: "quote"
+      - name: "quoteline"
+      - name: "userrole"
+      - name: "opportunitylineitem"
