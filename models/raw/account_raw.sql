@@ -121,7 +121,7 @@ with account as (select arr__c,
       from bidb.dl_bi.account a
       where 1 = 1
         and (partition_0 || '-' || partition_1 || '-' || partition_2)::date =
-            (select max((partition_0 || '-' || partition_1 || '-' || partition_2)::date) from dl_bi.account)
+            (select max((partition_0 || '-' || partition_1 || '-' || partition_2)::date) from bidb.dl_bi.account)
         and isdeleted = 'false')
 select *
 from account
