@@ -21,3 +21,9 @@ models:
   data_engineering_pipelines:
     raw:
       +materialized: table
+
+    staging:
+      +materialized: view
+    
+    marts:
+      +materialized: table

@@ -6,6 +6,8 @@ Try running the following commands:
 - dbt run
 - dbt test
 
+-- dbt run -s +account_product_churn
+
 
 ### Resources:
 - Learn more about dbt [in the docs](https://docs.getdbt.com/docs/introduction)

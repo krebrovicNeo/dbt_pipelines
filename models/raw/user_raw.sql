@@ -1,4 +1,4 @@
-{{ config(materialized='table') }}
+{{ config(materialized='view') }}
 
 with user_raw as (select *,
              sysdate as                                                       mv_refresh_date,

@@ -1,4 +1,4 @@
-{{ config(materialized='table') }}
+{{ config(materialized='view') }}
 
 with opportunitylineitem as (select *,
              sysdate as                                                       mv_refresh_date,
