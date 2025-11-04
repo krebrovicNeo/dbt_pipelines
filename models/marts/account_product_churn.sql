@@ -15,205 +15,6 @@ WITH incentives_per_quote AS
         select *
           from {{ ref('stg_apc_first_product_subscriptions') }}
           ),
-     churn_sheet_pdms AS (select *
-                          from {{ ref('stg_apc_churn_sheet_pdms') }}
-                          ),
-     churn_sheet_pdms_dedup as (select change_month_ending,
-                                       account_name,
-                                       account_id,
-                                       account_became_customer_date,
-                                       product_code,
-                                       subscription_item_name,
-                                       subscription_start_date,
-                                       subscription_end_date,
-                                       change_type,
-                                       incentive_type,
-                                       sum(subscription_arr)::int as subscription_arr
-                                        ,
-                                       account_state,
-                                       account_postal_code,
-                                       total_fte,
-                                       territory,
-                                       industry,
-                                       churn_description_power,
-                                       cancellation_description_power,
-                                       first_subscription_start_date,
-                                       closed_month_flag,
-                                       last_refresh_date
-                                from churn_sheet_pdms p
-                                where p.idx = 1
-                                group by change_month_ending,
-                                         account_name,
-                                         account_id,
-                                         account_became_customer_date,
-                                         product_code,
-                                         subscription_item_name,
-                                         subscription_start_date,
-                                         subscription_end_date,
-                                         change_type,
-                                         incentive_type,
-                                         account_state,
-                                         account_postal_code,
-                                         total_fte,
-                                         territory,
-                                         industry,
-                                         churn_description_power,
-                                         cancellation_description_power,
-                                         first_subscription_start_date,
-                                         closed_month_flag,
-                                         last_refresh_date),
-     account_hcm AS (SELECT x.*
-                     FROM (SELECT DISTINCT a.name
-                                         , a.id
-                                         , a.date_became_customer__c
-                                         , a.shippingstate
-                                         , a.shippingpostalcode
-                                         , a.total_employees__c
-                                         , a.territory2__c
-                                         , a.industry
-                                         , a.parentid
-                                         , a.brand_name_formula__c
-                                         , a.hcm_legacy_id__c
-                                         , ROW_NUMBER() OVER (partition by name order by a.hcm_legacy_id__c) as index
-                           FROM  {{ ref('account_raw') }} a
-                           WHERE a.hcm_legacy_id__c IS NOT NULL) x
-                     WHERE x.index = 1),
-     churn_sheet_hcm AS (select *
-                         from {{ ref('stg_apc_churn_sheet_hcm') }}
-         --  where account_id = '001Uh00000EOBT4IAP'
-         -- and subscription_end_date = '2024-10-31'
-     ),
-     churn_sheet_hcm_dedup as
-         (select change_month_ending,
-                 saasoptics_customer_name,
-                 account_name,
-                 account_id,
-                 hcm_legacy_id,
-                 account_became_customer_date,
-                 product_code,
-                 item_code,
-                 subscription_item_name,
-                 subscription_start_date,
-                 subscription_end_date,
-                 change_type,
-                 incentive_type,
-                 sum(subscription_arr)::int              as subscription_arr,
-                 account_state,
-                 account_postal_code,
-                 total_fte,
-                 territory,
-                 industry,
-                 min(first_subscription_start_date) as first_subscription_start_date,
-                 closed_month_flag,
-                 last_refresh_date
-          from churn_sheet_hcm
-          where idx = 1
-          group by change_month_ending,
-                   saasoptics_customer_name,
-                   account_name,
-                   account_id,
-                   hcm_legacy_id,
-                   account_became_customer_date,
-                   product_code,
-                   item_code,
-                   subscription_item_name,
-                   subscription_start_date,
-                   subscription_end_date,
-                   change_type,
-                   incentive_type,
-                   account_state,
-                   account_postal_code,
-                   total_fte,
-                   territory,
-                   industry,
-                   closed_month_flag,
-                   last_refresh_date)
-        ,
-     churn_and_subscriptions AS (SELECT 'Power'                business_division,
-                                        change_month_ending,
-                                        NULL::varchar(1000) as saasoptics_customer_name,
-                                        account_name,
-                                        account_id,
-                                        NULL::varchar(1000) as hcm_legacy_id,
-                                        account_became_customer_date,
-                                        product_code,
-                                        NULL::varchar(1000) as subscription_item_code,
-                                        subscription_item_name,
-                                        subscription_start_date,
-                                        subscription_end_date,
-                                        change_type,
-                                        incentive_type,
-                                        subscription_arr::int,
-                                        account_state,
-                                        account_postal_code,
-                                        total_fte,
-                                        territory,
-                                        industry,
-                                        churn_description_power,
-                                        cancellation_description_power,
-                                        first_subscription_start_date,
-                                        closed_month_flag,
-                                        null::date          as contract_end_date,
-                                        last_refresh_date
-                                 FROM churn_sheet_pdms_dedup c
-                                 UNION ALL
-                                 SELECT 'HCM'               as business_division,
-                                        change_month_ending,
-                                        saasoptics_customer_name,
-                                        account_name,
-                                        account_id,
-                                        hcm_legacy_id,
-                                        account_became_customer_date,
-                                        product_code,
-                                        item_code           as subscription_item_code,
-                                        subscription_item_name,
-                                        subscription_start_date,
-                                        subscription_end_date,
-                                        change_type,
-                                        incentive_type,
-                                        subscription_arr::int,
-                                        account_state,
-                                        account_postal_code,
-                                        total_fte,
-                                        territory,
-                                        industry,
-                                        NULL::varchar(1000) as churn_description_power,
-                                        NULL::varchar(1000) as cancellation_description_power,
-                                        first_subscription_start_date,
-                                        closed_month_flag,
-                                        null::date          as contract_end_date,
-                                        last_refresh_date
-                                 FROM churn_sheet_hcm_dedup c
-                                 UNION ALL
-                                 SELECT s.business_division,
-                                        month_ending,
-                                        NULL::varchar(1000) as saasoptics_customer_name,
-                                        account_name,
-                                        account_id,
-                                        NULL::varchar(1000) as hcm_legacy_id,
-                                        account_became_customer_date,
-                                        product_code,
-                                        subscription_item_code,
-                                        subscription_item_name,
-                                        subscription_start_date,
-                                        subscription_end_date,
-                                        NULL::varchar(1000) as change_type,
-                                        incentive_type,
-                                        subscription_arr::int,
-                                        account_state,
-                                        account_postal_code,
-                                        total_fte,
-                                        territory,
-                                        industry,
-                                        NULL::varchar(1000) as churn_description_power,
-                                        NULL::varchar(1000) as cancellation_description_power,
-                                        first_subscription_start_date,
-                                        NULL::int                as closed_month_flag,
-                                        contract_end_date,
-                                        null::date          as last_refresh_date
-                                 FROM product_subscriptions s
-                                 )
-        ,
      churn_reasons_new AS (SELECT atrisk.createddate                           as at_risk_create_date
                                 , h.account_id
                                 , NULL::varchar(1000)                          as at_risk_stage
@@ -239,7 +40,7 @@ WITH incentives_per_quote AS
                                               ON ce.id = atrisk.customer_engagement_associated_record__c
                                     LEFT JOIN {{ ref('new_product2_mapping_raw') }} map_atrisk -- quickfix 2024-12-04 (CHANGE TO ALIGN WITH PRODUCTS IN PRODUCT2 OBJECT)
                                               ON ISNULL(atrisk.product_name__c, atrisk.products__c) = map_atrisk.name -- Look into this churn reason attribution
-                                    LEFT JOIN churn_and_subscriptions h
+                                    LEFT JOIN {{ ref('stg_churn_and_subscriptions') }} h
                                               ON atrisk.account_id__c = h.account_id
                                                   AND map_atrisk.product_code = h.product_code
                                                   AND h.change_type = 'Churn'
@@ -278,7 +79,7 @@ WITH incentives_per_quote AS
                                   mappings.ngv_atriskproduct_atriskproductname_to_productcode map_atrisk -- quickfix 2024-05-17 (Inserted product code for Attract)
                                                  ON ISNULL(at_risk.product_grouping__c, at_risk.at_risk_product_name__c) =
                                                     map_atrisk.raw_atriskproductname_value
-                                       LEFT JOIN churn_and_subscriptions h
+                                       LEFT JOIN {{ ref('stg_churn_and_subscriptions') }} h
                                                  ON ce.account__c = h.hcm_legacy_id
                                                      AND map_atrisk.mapped_atriskproductname_value = h.product_code
 --                                                       AND atrisk.createddate <= date_add('year', 1, h.subscription_end_date)
@@ -355,7 +156,7 @@ WITH incentives_per_quote AS
                         ORDER BY p.subscription_end_date DESC
                         )    as rn
              FROM derived_datasets.nps n
-                      INNER JOIN churn_and_subscriptions p
+                      INNER JOIN {{ ref('stg_churn_and_subscriptions') }} p
                                  ON
                                      --n.business_division = 'PDMS'
                                      n.account_id = p.account_id
@@ -413,7 +214,7 @@ WITH incentives_per_quote AS
                       c.product_code,
                       p.subscription_end_date
                FROM derived_datasets.cs_cases c
-                        INNER JOIN churn_and_subscriptions p
+                        INNER JOIN {{ ref('stg_churn_and_subscriptions') }} p
                                    ON c.account_id = p.account_id
                                        and c.product_code = p.product_code
                                        AND c.created_date <= p.subscription_end_date
@@ -443,7 +244,7 @@ WITH incentives_per_quote AS
                                 OVER (PARTITION BY i.account_id, i.product_code, cs.subscription_end_date ORDER BY i.reporting_week_end DESC) as imp_index
 
                          FROM derived_datasets.implementations_weekly_hcm i
-                                  INNER JOIN churn_and_subscriptions cs
+                                  INNER JOIN {{ ref('stg_churn_and_subscriptions') }} cs
                                              ON i.account_id = cs.account_id
                                                  AND case
                                                          when i.product_code = 'PowerReady' then 'PowerFTO'
@@ -465,7 +266,7 @@ WITH incentives_per_quote AS
                                  LEFT OUTER JOIN sfdc_silver.mv_account_merge a
                                                  ON na.salesforceid = a.id
 
-                                 INNER JOIN churn_and_subscriptions h
+                                 INNER JOIN {{ ref('stg_churn_and_subscriptions') }} h
                                             ON a.id = h.account_id
                                                 AND t.product = h.product_code
 
@@ -587,7 +388,7 @@ WITH incentives_per_quote AS
                                      END
                                     )
                                  OVER ()                                                                  as latest_closed_month_ending
-                          FROM churn_and_subscriptions pc
+                          FROM {{ ref('stg_churn_and_subscriptions') }} pc
                                    LEFT JOIN derived_datasets.v_account_partnership_attributes_refactored x -- TODO: REVIEW THIS DATASET
                                              ON pc.account_id = x.account_id
                                    LEFT JOIN sfdc_silver.mv_account_merge a ON pc.account_id = a.id
@@ -637,7 +438,7 @@ WITH incentives_per_quote AS
                             subscription_end_date::date,
                            
                             incentive_type::varchar(1000),
-                            0 as subscription_arr, --subscription_arr::int,
+                            subscription_arr::int as subscription_arr, --subscription_arr::int,
                             account_state::varchar(50),
                             account_postal_code::varchar(50),
                             total_fte::int,
@@ -731,7 +532,7 @@ WITH incentives_per_quote AS
                            subscription_end_date::date,
                            
                            NULL::varchar(1000)                                            as incentive_type
-                           ,0 as subscription_arr --subscription_arr::int
+                           ,subscription_arr::int as subscription_arr --subscription_arr::int
                            ,account_state::varchar(50),
                            account_postal_code::varchar(50),
                            total_fte::int,
