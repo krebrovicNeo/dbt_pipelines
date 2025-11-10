@@ -27,3 +27,6 @@ models:
     
     marts:
       +materialized: table
+
+    int:
+      +materialized: ephemeral
