@@ -1,0 +1,14 @@
+models:
+  - name: int_first_product_subscription
+    description: "Identifies the first subscription start date for each account-product pair."
+    columns:
+  - name: account_id
+    description: "Unique account identifier."
+    tests:
+      - not_null
+  - name: product_code
+    description: "Sourced from the product2 mapping table as a derived simplified product code."
+    tests:
+      - not_null
+  - name: first_product_subscription_start_date
+    description: "Earliest date the customer subscribed to a product."
