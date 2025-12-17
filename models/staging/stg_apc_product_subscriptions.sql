@@ -26,7 +26,7 @@ with product_subscriptions AS (SELECT aps.business_division,
                                        ,
                                       sysdate                                                       as refresh_ts
                                FROM derived_datasets.account_product_subscriptions aps
-                                        LEFT OUTER JOIN staging.tmp_apc_incentive_per_quote ipq ON ipq.idx = 1
+                                        LEFT OUTER JOIN {{ ref('stg_apc_incentive_per_quote') }} ipq ON ipq.idx = 1
                                    AND aps.account_id = ipq.account_id
                                    AND aps.item_code = ipq.item_code
                                    AND aps.subscription_end_date = ipq.subscription_end_date)

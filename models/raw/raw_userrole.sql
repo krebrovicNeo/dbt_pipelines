@@ -1,4 +1,4 @@
-{{ config(materialized='view') }}
+{{ config(materialized='table') }}
 
 with user_role as (select *,
              sysdate as                                                       mv_refresh_date,

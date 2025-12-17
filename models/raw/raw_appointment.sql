@@ -1,5 +1,5 @@
 -- models/raw/appointment_raw.sql
-{{ config(materialized='view') }}
+{{ config(materialized='table') }}
 
 with appointment as (
   select *,

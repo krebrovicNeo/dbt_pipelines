@@ -35,10 +35,10 @@ WITH incentives_per_quote AS
                                   OVER (PARTITION BY h.account_id, map_atrisk.product_code, h.subscription_end_date
                                       ORDER BY atrisk.createddate DESC)        as atrisk_index
                                 , 'churn_reasons_new'                          as source
-                           FROM {{ ref('at_risk_product__c_raw') }} atrisk
-                                    LEFT JOIN {{ ref('customer_engagement__c_raw') }} ce
+                           FROM {{ ref('raw_at_risk_product__c') }} atrisk
+                                    LEFT JOIN {{ ref('raw_customer_engagement__c') }} ce
                                               ON ce.id = atrisk.customer_engagement_associated_record__c
-                                    LEFT JOIN {{ ref('new_product2_mapping_raw') }} map_atrisk -- quickfix 2024-12-04 (CHANGE TO ALIGN WITH PRODUCTS IN PRODUCT2 OBJECT)
+                                    LEFT JOIN {{ ref('raw_new_product2_mapping') }} map_atrisk -- quickfix 2024-12-04 (CHANGE TO ALIGN WITH PRODUCTS IN PRODUCT2 OBJECT)
                                               ON ISNULL(atrisk.product_name__c, atrisk.products__c) = map_atrisk.name -- Look into this churn reason attribution
                                     LEFT JOIN {{ ref('stg_churn_and_subscriptions') }} h
                                               ON atrisk.account_id__c = h.account_id

@@ -75,11 +75,11 @@ WITH incentives_per_quote AS
                                          , a.brand_name_formula__c
                                          , a.hcm_legacy_id__c
                                          , ROW_NUMBER() OVER (partition by name order by a.hcm_legacy_id__c) as index
-                           FROM  "bidb"."dbt_datasets"."account_raw" a
+                           FROM  {{ ref('raw_account') }} a
                            WHERE a.hcm_legacy_id__c IS NOT NULL) x
                      WHERE x.index = 1),
      churn_sheet_hcm AS (select *
-                         from "bidb"."dbt_datasets"."stg_apc_churn_sheet_hcm"
+                         from {{ ref('stg_apc_churn_sheet_hcm') }}
          --  where account_id = '001Uh00000EOBT4IAP'
          -- and subscription_end_date = '2024-10-31'
      ),

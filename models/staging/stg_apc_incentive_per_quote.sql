@@ -31,19 +31,19 @@ WITH incentives AS (SELECT s.id                                                 
                          , ROW_NUMBER()
                            OVER (PARTITION BY quote_id, item_code ORDER BY subscription_end_date DESC) AS rn
                          , sysdate                                                                     as refresh_ts
-                    FROM {{ ref('sbqq__subscription__c_raw') }} s
+                    FROM {{ ref('raw_sbqq_subscription__c') }} s
 --                     INNER JOIN churn_and_subscriptions cs
-                             INNER JOIN {{ ref('account_raw') }} a ON s.sbqq__account__c = a.id
-                             INNER JOIN {{ ref('quoteline_raw') }} ql
+                             INNER JOIN {{ ref('raw_account') }} a ON s.sbqq__account__c = a.id
+                             INNER JOIN {{ ref('raw_quoteline') }} ql
                                         ON ql.x18_digit_ql_id__c = s.sbqq__quoteline__c -- SBQQ__OriginalQuoteLine__c OR SBQQ__QuoteLine__c
-                             LEFT JOIN {{ ref('quote_raw') }} q ON ql.sbqq__quote__c = q.id
-                             INNER JOIN {{ ref('opportunity_raw') }} o ON o.SBQQ__PrimaryQuote__c = q.id
-                             LEFT OUTER JOIN {{ ref('product2_raw') }} p
+                             LEFT JOIN {{ ref('raw_quote') }} q ON ql.sbqq__quote__c = q.id
+                             INNER JOIN {{ ref('raw_opportunity') }} o ON o.SBQQ__PrimaryQuote__c = q.id
+                             LEFT OUTER JOIN {{ ref('raw_product2') }} p
                                              ON s.sbqq__product__c = p.id
                              LEFT JOIN (select distinct item_code, name, family, product_code, business_division
-                                        from {{ ref('new_product2_mapping_raw') }}) m
+                                        from {{ ref('raw_new_product2_mapping') }}) m
                                        on m.item_code = p.productcode
-                             LEFT OUTER JOIN {{ ref('contract_raw') }} c -- new join
+                             LEFT OUTER JOIN {{ ref('raw_contract') }} c -- new join
                                              ON s.sbqq__contract__c = c.id
                     WHERE o.incentive_type__c IS NOT NULL
                       AND o.incentive_type__c <> 'None'

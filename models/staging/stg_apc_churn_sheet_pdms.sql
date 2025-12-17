@@ -33,8 +33,8 @@ SELECT 'PDMS'                                  as                               
        over (partition by a.id, c.product, c."churn amount" order by change_month_ending desc, init_subs.first_subscription_start_date) idx
         ,
        sysdate                                 as                                                                                       refresh_ts
-FROM {{ ref('historypdms_raw') }} c
-         LEFT OUTER JOIN  {{ ref('account_raw') }} a ON a.intacctid__c = c."account number"
+FROM {{ ref('raw_historypdms') }} c
+         LEFT OUTER JOIN  {{ ref('raw_account') }} a ON a.intacctid__c = c."account number"
          LEFT OUTER JOIN  {{ ref('stg_apc_first_product_subscriptions') }} init_subs ON init_subs.account_id = a.id
     AND init_subs.product_code = c.product
          LEFT OUTER JOIN  {{ ref('stg_apc_incentive_per_quote') }} ipq ON ipq.idx = 1

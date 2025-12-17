@@ -13,7 +13,7 @@ with account_hcm AS (SELECT x.*
                                          , a.brand_name_formula__c
                                          , a.hcm_legacy_id__c
                                          , ROW_NUMBER() OVER (partition by name order by a.hcm_legacy_id__c) as index
-                           FROM {{ ref('account_raw') }} a
+                           FROM {{ ref('raw_account') }} a
                            WHERE a.hcm_legacy_id__c IS NOT NULL) x
                      WHERE x.index = 1),
      churn_sheet_hcm AS (SELECT 'HCM'                                                                            as business_division
@@ -51,7 +51,7 @@ with account_hcm AS (SELECT x.*
                                     order by change_month_ending desc, init_subs.first_subscription_start_date)  as idx
                               , sysdate                                                                          as refresh_ts
                          FROM 
-                             {{ ref('historyhcm_raw') }} e
+                             {{ ref('raw_historyhcm') }} e
 
 
                                   LEFT OUTER JOIN account_hcm a
